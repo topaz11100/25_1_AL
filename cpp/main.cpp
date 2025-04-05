@@ -1,15 +1,12 @@
 #include "include.h"
 #include "bin_search.h"
 #include "mysort.h"
+#include "combi.h"
 
 
 int main()
 {
-    vector<int> a{ 1,-2,30,0,-5,6,97,9,4 };
-
-    quicksort(a, 0, a.size() - 1);
-
-    print_vector(a);
-
+    int n = 10, k = 5;
+    cout << bottom_up_combi(n, k);
     return 0;
 }
