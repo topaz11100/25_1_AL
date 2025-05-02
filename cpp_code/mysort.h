@@ -10,13 +10,14 @@ void merge(vector<T>& v, int low, const vector<T>& a, const vector<T>& b)
         if (a[a_i] <= b[b_i])
         {
             v[low] = a[a_i];
-            low += 1; a_i += 1;
+            a_i += 1;
         }
         else
         {
             v[low] = b[b_i];
-            low += 1; b_i += 1;
+            b_i += 1;
         }
+        low += 1;
     }
     while (a_i < a.size()) { v[low] = a[a_i]; low += 1; a_i += 1; }
     while (b_i < b.size()) { v[low] = b[b_i]; low += 1; b_i += 1; }
