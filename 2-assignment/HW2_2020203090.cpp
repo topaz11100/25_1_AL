@@ -30,6 +30,12 @@ bool compare_score(const snum_score& a, const snum_score& b)
     return a.second > b.second;
 }
 
+//학번 오름차순 정렬
+bool compare_snum(const snum_score& a, const snum_score& b)
+{
+    return a.first < b.first;
+}
+
 int add_score(int sum, const snum_score& p)
 {
     return sum + p.second;
@@ -75,7 +81,7 @@ pair<int, vector<vector<snum_score>>> method_1(const vector<snum_score>& score, 
             if (find(start_index.begin(), start_index.end(), i) == start_index.end())
                 start_index.push_back(i);
 
-    //정렬
+    //분할 인덱스 정렬
     sort(start_index.begin(), start_index.end());
     start_index.push_back(score.size());
 
@@ -85,6 +91,10 @@ pair<int, vector<vector<snum_score>>> method_1(const vector<snum_score>& score, 
     for (int i = 1; i < start_index.size(); i += 1)
         result.push_back(vector<snum_score>(score.begin() + start_index[i - 1], score.begin() + start_index[i]));
 
+    //학번 오름차순 정렬
+    for (auto& v : result)
+        sort(v.begin(), v.end(), compare_snum);
+        
     return pair{ sum, result };
 }
 
@@ -99,25 +109,23 @@ int main()
 {
     //입력 처리 및 정렬
     auto data = input();
-    //print(cout, data.first);
-    stable_sort(data.first.begin(), data.first.end(), compare_score);
+    sort(data.first.begin(), data.first.end(), compare_score);
 
-    //메소드 1, 2
+    //메소드 1 및 출력
     pair<int, vector<vector<snum_score>>> result_method_1 = method_1(data.first, data.second);
-    //pair<int, vector<vector<snum_score>>> result_method_2 = method_2(data.first, data.second);
-
-    //출력 처리
     cout << result_method_1.first << endl;
-    //cout << result_method_2.first << endl;
-
     ofstream f_m1{ "Partition1.txt" };
     for (const auto& score : result_method_1.second)
         print(f_m1, score);
 
+    //메소드 2 및 출력
     /*
+    cout << result_method_2.first << endl;
+    pair<int, vector<vector<snum_score>>> result_method_2 = method_2(data.first, data.second);
     ofstream f_m2{ "Partition2.txt" };
     for (const auto& score : result_method_2.second)
         print(f_m2, score);
     */
+    
     return 0;
 }
