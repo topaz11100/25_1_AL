@@ -1,131 +1,183 @@
-#include <algorithm>
-#include <vector>
 #include <iostream>
 #include <fstream>
-#include <utility>
+#include <algorithm>
+#include <vector>
+#include <string>
+#include <ranges>
 #include <numeric>
-#include <unordered_set>
+#include <limits>
+#include <iomanip>
+#include <functional>
 
 using namespace std;
+using student = pair<int, int>;
 
-/*
-vector 의 원소는 pair{학번순서, 점수}
-입력 함수는 pair{점수배열, 그룹 수} 반환
-*/
-
-using snum_score = pair<int, int>;
-
-void print(ostream& out, const vector<snum_score>& vec)
-{
-    for (const auto& v : vec)
-    {
-        out << v.first << "(" << v.second << ") ";
-    }
-    out << endl;
-}
-
-//점수 내림차순 정렬
-bool compare_score(const snum_score& a, const snum_score& b)
-{
-    return a.second > b.second;
-}
-
-//학번 오름차순 정렬
-bool compare_snum(const snum_score& a, const snum_score& b)
-{
-    return a.first < b.first;
-}
-
-int add_score(int sum, const snum_score& p)
-{
-    return sum + p.second;
-}
-
-pair<vector<snum_score>, int> input()
-{
-    int n, k, temp;
-    cin >> n >> k;
-    vector<snum_score> score;
-    for (int i = 0; i < n; i += 1)
-    {
-        cin >> temp;
-        score.push_back(pair{ i + 1, temp });
-    }
-    return pair{score, k};
-}
-
-pair<int, vector<vector<snum_score>>> method_1(const vector<snum_score>& score, int k)
+void method1(vector<student> s_v, int k)
 {
     //값이 차이나면 다른 데이터 그룹 간주, diff에 저장
-    vector<snum_score> diff;
-    for (int i = 1; i < score.size(); i += 1)
+    //가르는 인덱스는 그룹의 끝 원소 인덱스 + 1
+    vector<student> diff;
+    for (int i = 0; i < s_v.size() - 1; i += 1)
     {
-        int score_diff = score[i - 1].second - score[i].second;
-        if (score_diff == 0) continue;
-        diff.push_back(snum_score{ i, score_diff });
+        int s_v_diff = s_v[i].second - s_v[i + 1].second;
+        if (s_v_diff == 0) continue;
+        diff.push_back(student{ i + 1, s_v_diff });
     }
 
     //diff에서 k-1개 그룹으로 병합
-    //상위 k개 정렬
-    int k_1 = diff.size() > k - 1 ? k - 1 : diff.size();
-    partial_sort(diff.begin(), diff.begin() + k_1, diff.end(), compare_score);
+    //상위 k_1개 정렬
+    int k_1 = k - 1 < diff.size() ? k - 1 : diff.size();
+    ranges::partial_sort(diff, diff.begin() + k_1, greater(), &student::second);
 
-    //k-1개 분할 인덱스 저장
-    vector<int> start_index{ 0 };
+    //k_1개 분할 인덱스 저장
+    vector<int> end_idx{};
     for (int i = 0; i < k_1; i += 1)
-        start_index.push_back(diff[i].first);
+        end_idx.push_back(diff[i].first);
 
     //더 필요하면(이 상황은 같은 점수 배열을 나눠야하므로 어디가 분할되던 최대는 불변이다)
-    if (k > start_index.size())
-        for (int i = 0; i < score.size() && start_index.size() < k; i += 1)
-            if (find(start_index.begin(), start_index.end(), i) == start_index.end())
-                start_index.push_back(i);
+    if (k - 1 > k_1)
+        for (int i = 1; i < s_v.size() && end_idx.size() < k - 1; i += 1)
+            //같은 점수 구간 쪼갬 - 엔드인덱스에 포함 안된 인덱스 넣음
+            if (find(end_idx.begin(), end_idx.end(), i) == end_idx.end())
+                end_idx.push_back(i);
 
-    //분할 인덱스 정렬
-    sort(start_index.begin(), start_index.end());
-    start_index.push_back(score.size());
+    //경계조건 추가, 분할 인덱스 정렬
+    end_idx.push_back(0);
+    end_idx.push_back(s_v.size());
+    sort(end_idx.begin(), end_idx.end());
 
     //결과 생성 및 반환
-    int sum = accumulate(diff.begin(), diff.begin() + k_1, 0, add_score);
-    vector<vector<snum_score>> result;
-    for (int i = 1; i < start_index.size(); i += 1)
-        result.push_back(vector<snum_score>(score.begin() + start_index[i - 1], score.begin() + start_index[i]));
-
+    int sum = accumulate(diff.begin(), diff.begin() + k_1, 0,
+        [](int acc, const student& p) { return acc + p.second; });
     //학번 오름차순 정렬
-    for (auto& v : result)
-        sort(v.begin(), v.end(), compare_snum);
-        
-    return pair{ sum, result };
+    for (int i = 0; i < end_idx.size() - 1; i += 1)
+        ranges::sort(s_v.begin() + end_idx[i],
+            s_v.begin() + end_idx[i + 1],
+            less(), &student::first);
+
+    //출력부
+    cout << sum << endl;
+    ofstream out{ "Partition1.txt" };
+    for (int i = 0; i < end_idx.size() - 1; i += 1)
+    {
+        for (int j = end_idx[i]; j < end_idx[i + 1]; j += 1)
+            out << s_v[j].first << "(" << s_v[j].second << ") ";
+        out << endl;
+    }
 }
 
-/*
-pair<int, vector<vector<snum_score>>> method_2(const vector<snum_score>& score, int k)
+//누적합 배열 이용, [start, end] 구간 분산 구함
+double var(int start, int end, const vector<long long>& sum, const vector<long long>& sum2)
 {
-
+    if (start == end) return 0;
+    long long size = (long long)(end - start + 1);
+    long long before_s = start > 0 ? sum[start - 1] : 0;
+    long long before_s2 = start > 0 ? sum2[start - 1] : 0;
+    long long upper = size * (sum2[end] - before_s2) - (sum[end] - before_s) * (sum[end] - before_s);
+    return (double)upper / (double)(size * size);
 }
-*/
+
+//메모이제이션
+void method2_recur(vector<vector<double>>& V,
+    int k, int i,
+    vector<vector<int>>& T,
+    const vector<long long>& sum, const vector<long long>& sum2)
+{
+    //배열에 있으면 종료
+    if (V[k][i] >= 0) return;
+
+    //점화식
+    double result = numeric_limits<double>::max();
+    int opt = 0;
+    for (int t = k - 1; t < i; t += 1)
+    {
+        method2_recur(V, k - 1, t, T, sum, sum2);
+        double temp = V[k - 1][t] + var(t + 1, i, sum, sum2);
+        if (temp <= result)
+        {
+            result = temp;
+            opt = t;
+        }
+    }
+    //배열 값 갱신
+    T[k][i] = opt;
+    V[k][i] = result;
+}
+
+void track_opt_idx(const vector<vector<int>>& T, int k, int i, vector<int>& result)
+{
+    if (k <= 0) return;
+    //재귀추적(구간 정렬 위해 구간 끝 원소의 다음 인덱스 저장)
+    int opt = T[k][i];
+    result.push_back(opt + 1);
+    track_opt_idx(T, k - 1, opt, result);
+}
+
+void method2(vector<student> s_v, int k)
+{
+    int size = s_v.size();
+    //분산 누적합 구조
+    vector<long long> sum(size);
+    vector<long long> sum2(size);
+    sum[0] = (long long)s_v[0].second;
+    sum2[0] = (long long)(s_v[0].second * s_v[0].second);
+    for (int i = 1; i < size; i += 1)
+    {
+        sum[i] = sum[i - 1] + (long long)s_v[i].second;
+        sum2[i] = sum2[i - 1] + (long long)(s_v[i].second * s_v[i].second);
+    }
+
+    //최적값 배열
+    vector<vector<double>> V(k, vector<double>(size, -1));
+    //인덱스 추적 배열
+    vector<vector<int>> T(k, vector<int>(size, -1));
+    //경곗값 처리 (k=0은 분할 안하므로 [0, i]의 분산)
+    for (int i = 0; i < size; i += 1)
+        V[0][i] = var(0, i, sum, sum2);
+
+    //동적계획법 메모이제이션 구현
+    method2_recur(V, k - 1, size - 1, T, sum, sum2);
+
+    //출력부
+    //분산 최소 출력(소수점 3자리표현 - 반올림)
+    cout << fixed << setprecision(3) << V[k - 1][size - 1] << endl;
+    //학번 순 그룹 짓기
+    //최적 인덱스 저장
+    vector<int> opt_idx{ size, 0 };
+    track_opt_idx(T, k - 1, size - 1, opt_idx);
+    sort(opt_idx.begin(), opt_idx.end());
+    //학번 오름차순 정렬
+    for (int i = 0; i < opt_idx.size() - 1; i += 1)
+        ranges::sort(s_v.begin() + opt_idx[i],
+            s_v.begin() + opt_idx[i + 1],
+            less(), &student::first);
+    //파일 출력
+    ofstream out{ "Partition2.txt" };
+    for (int i = 0; i < opt_idx.size() - 1; i += 1)
+    {
+        for (int j = opt_idx[i]; j < opt_idx[i + 1]; j += 1)
+            out << s_v[j].first << "(" << s_v[j].second << ") ";
+        out << endl;
+    }
+}
 
 int main()
 {
-    //입력 처리 및 정렬
-    auto data = input();
-    sort(data.first.begin(), data.first.end(), compare_score);
+    //입력 처리
+    int n, k, temp;
+    cin >> n >> k;
+    vector<student> s_v;
+    for (int i = 0; i < n; i += 1)
+    {
+        cin >> temp;
+        s_v.push_back(pair{ i + 1, temp });
+    }
+    //내림차순 정렬
+    ranges::sort(s_v, greater(), &student::second);
 
-    //메소드 1 및 출력
-    pair<int, vector<vector<snum_score>>> result_method_1 = method_1(data.first, data.second);
-    cout << result_method_1.first << endl;
-    ofstream f_m1{ "Partition1.txt" };
-    for (const auto& score : result_method_1.second)
-        print(f_m1, score);
+    //함수 실행
+    method1(s_v, k);
+    method2(s_v, k);
 
-    //메소드 2 및 출력
-    /*
-    cout << result_method_2.first << endl;
-    pair<int, vector<vector<snum_score>>> result_method_2 = method_2(data.first, data.second);
-    ofstream f_m2{ "Partition2.txt" };
-    for (const auto& score : result_method_2.second)
-        print(f_m2, score);
-    */
-    
     return 0;
 }

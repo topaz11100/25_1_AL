@@ -1,0 +1,37 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\topaz\\Desktop\\25_1_AL\\2-assignment\\msvc_test\\2nd_assignment\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{A0CBB2E2-A2F4-4858-95DC-BD6763352F6A}|2nd_assignment\\2nd_assignment.vcxproj|C:\\Users\\topaz\\Desktop\\25_1_AL\\2-assignment\\msvc_test\\2nd_assignment\\2nd_assignment\\HW2_2020203090.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A0CBB2E2-A2F4-4858-95DC-BD6763352F6A}|2nd_assignment\\2nd_assignment.vcxproj|solutionrelative:2nd_assignment\\HW2_2020203090.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "HW2_2020203090.cpp",
+              "DocumentMoniker": "C:\\Users\\topaz\\Desktop\\25_1_AL\\2-assignment\\msvc_test\\2nd_assignment\\2nd_assignment\\HW2_2020203090.cpp",
+              "RelativeDocumentMoniker": "2nd_assignment\\HW2_2020203090.cpp",
+              "ToolTip": "C:\\Users\\topaz\\Desktop\\25_1_AL\\2-assignment\\msvc_test\\2nd_assignment\\2nd_assignment\\HW2_2020203090.cpp",
+              "RelativeToolTip": "2nd_assignment\\HW2_2020203090.cpp",
+              "ViewState": "AgIAAJkAAAAAAAAAAAAAADYAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-05-09T11:38:20.292Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
