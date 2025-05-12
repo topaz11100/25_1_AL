@@ -1,6 +1,8 @@
 /*
 학번 : 2020203090
 이름 : 한용옥
+언어 : `c++20`
+컴파일러 및 IDE : Microsoft Visual Studio Community 2022 버전 17.13.6
 */
 
 #include <iostream>
