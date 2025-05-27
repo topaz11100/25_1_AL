@@ -7,6 +7,7 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 using namespace std;
 
@@ -20,7 +21,12 @@ const vector<string> paint{ "A+", "B+", "C+", "D+",
 							"A/", "B/", "C/", "D/" };
 bool paint_pair(const string& a, const string& b)
 {
-	return a[0] == b[0] && a[1] != b[1];
+	if (a[0] != b[0]) return false;
+	bool check = (a[1] == '+' && b[1] == '-') ||
+				 (a[1] == '-' && b[1] == '+') ||
+				 (a[1] == '*' && b[1] == '/') ||
+				 (a[1] == '/' && b[1] == '*');
+	return check;
 }
 enum direction
 {// 상태 저장 순서
@@ -52,11 +58,11 @@ public:
 	{//반시계 회전
 		shift_count = (shift_count + 1) % 4;
 		string end = state[0];
-		for (int i = 0; i < 2;i += 1)
+		for (int i = 0; i < 3;i += 1)
 		{
 			state[i] = state[i + 1];
 		}
-		state[4] = end;
+		state[3] = end;
 	}
 private:
 	int number;
@@ -64,26 +70,17 @@ private:
 	vector<string> state;
 };
 
-vector<piece*> piece_vec;
-vector<vector<piece*>> puzzle;
-
-pair<int, int> num_to_XY(int num)
+bool puzzle_piece_promising(piece* target, int num, const vector<vector<piece*>>& puzzle)
 {
-	int row = num / 3;
-	int col = num % 3;
-	return pair<int, int>{row, col};
-}
-
-bool promising(const vector<vector<piece*>>& puzzle,
-			   piece* target, int num)
-{
+	//처음은 그냥 통과
+	if (num == 0) return true;
+	
 	//들어가는 퍼즐 조각 - target 기준
 	//target의 좌표
 	int row = num / 3, col = num % 3;
-	//처음은 그냥 통과
-	if (num == 0) return true;
+	
 	//왼쪽만 보면 되는 경우
-	else if (num == 1 || num == 2)
+	if (num == 1 || num == 2)
 	{
 		piece* compare = puzzle[row][col - 1];
 		return paint_pair(target->get_state(direction::W), compare->get_state(direction::E));
@@ -102,6 +99,40 @@ bool promising(const vector<vector<piece*>>& puzzle,
 		return paint_pair(target->get_state(direction::W), compare1->get_state(direction::E)) &&
 			   paint_pair(target->get_state(direction::N), compare2->get_state(direction::S));
 	}
+}
+
+vector<piece*> piece_vec;
+vector<vector<piece*>> puzzle(3, vector<piece*>(3));
+
+bool backtracking(int puzzle_num, int remain_piece)
+{
+	//해 완성되면 탈출
+	if (puzzle_num == 9) return true;
+
+	//남은 조각들에 대해(비트 마스크 사용)
+	for (int p_i = 0; p_i < 9; p_i += 1)
+		if (remain_piece & (1 << p_i))
+		{
+			//조각 promising 검사 후 대입
+			piece* now = piece_vec[p_i];
+			int row = puzzle_num / 3, col = puzzle_num % 3;
+			//회전 고려(회전 4번해서 원 상태로 만듬)
+			for (int shift = 0; shift < 4; shift += 1)
+			{
+				if (puzzle_piece_promising(now, puzzle_num, puzzle))
+				{
+					puzzle[row][col] = now;
+					//해당하는 해 하나만 보임
+					int mask = remain_piece & ~(1 << p_i);
+					if (backtracking(puzzle_num + 1, mask)) return true;
+				}
+				now->shift();
+			}
+			puzzle[row][col] = nullptr;
+		}
+
+	//여기로 오면 해가 없는것
+	return false;
 }
 
 void input_process()
@@ -134,48 +165,42 @@ void input_process()
 	}
 }
 
-void print_puzzle(const vector<piece*>& v)
+void print_puzzle(const vector<vector<piece*>>& grid)
 {
 	cout << "\n퍼즐 풀이\n(a,b) = (퍼즐 번호, 반시계 90도 회전한 횟수)\n\n";
 
 	for (int row = 0; row < 3; ++row)
 	{
-		// 첫 줄: 북쪽 방향 출력
+		// 첫 줄: 북쪽 방향
 		for (int col = 0; col < 3; ++col)
 		{
-			const piece* p = v[row * 3 + col];
+			const piece* p = grid[row][col];
 			cout << "--- " << p->get_state(N) << "  --- ";
 		}
 		cout << "\n";
 
-		// 둘째 줄: 넘버 출력
+		// 둘째 줄: 위쪽 여백
 		for (int col = 0; col < 3; ++col)
-		{
-			const piece* p = v[row * 3 + col];
 			cout << "|         | ";
-		}
 		cout << "\n";
 
-		// 셋째 줄: 서쪽 동쪽
+		// 셋째 줄: 서쪽, 번호/시프트, 동쪽
 		for (int col = 0; col < 3; ++col)
 		{
-			const piece* p = v[row * 3 + col];
+			const piece* p = grid[row][col];
 			cout << p->get_state(W) << " (" << p->get_number() << "," << p->get_shift_count() << ") " << p->get_state(E) << " ";
 		}
 		cout << "\n";
 
-		// 넷째 줄: 시프트 수
+		// 넷째 줄: 아래쪽 여백
 		for (int col = 0; col < 3; ++col)
-		{
-			const piece* p = v[row * 3 + col];
 			cout << "|         | ";
-		}
 		cout << "\n";
 
-		// 다섯째 줄: 남쪽
+		// 다섯째 줄: 남쪽 방향
 		for (int col = 0; col < 3; ++col)
 		{
-			const piece* p = v[row * 3 + col];
+			const piece* p = grid[row][col];
 			cout << "--- " << p->get_state(S) << "  --- ";
 		}
 		cout << "\n";
@@ -185,8 +210,11 @@ void print_puzzle(const vector<piece*>& v)
 int main()
 {
 	input_process();
-	print_puzzle(piece_vec);
-	
+
+	int init = 511;
+	if (backtracking(0, init)) print_puzzle(puzzle);
+	else cout << "해가 없다" << endl;	
+
 	for (auto p : piece_vec)
 		delete p;
 
