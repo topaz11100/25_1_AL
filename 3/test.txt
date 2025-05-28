@@ -1,0 +1,21 @@
+퍼즐 1
+A* B* B/ C*
+B/ A* C/ C*
+C* A/ B/ B*
+A* C* B/ B*
+D+ C/ A* B/
+D+ A/ C/ D-
+D- A* A/ C/
+A* B/ C* D-
+D+ A/ A* B*
+
+퍼즐 2
+B+ A* D+ C-
+B- D- C- A/
+A- D* B+ C*
+B* C/ D+ A-
+C+ D/ B/ A/
+D- A* C* B/
+C- B* D+ A/
+B- C* A+ D*
+D- A+ C+ B+
