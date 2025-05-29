@@ -27,7 +27,7 @@ public:
 
 	void set_number(int n) { number = n; }
 
-	void set_state(int s_idx, char first, char second)
+	void set_state(size_t s_idx, char first, char second)
 	{
 		for (size_t shift = 0; shift < SHIFT_TYPE; shift += 1)
 		{
@@ -229,7 +229,7 @@ void print_puzzle()
 	}
 }
 
-void print_test()
+void input_print()
 {
 	for (size_t r = 0; r < PUZ_ROW; r += 1)
 		for (size_t c = 0; c < PUZ_COL; c += 1)
@@ -250,7 +250,7 @@ int main()
 {
 	input_process();
 	std::cout << "\n입력 퍼즐 표시\n";
-	print_test();
+	input_print();
 	
 	int init = 511;
 	if (backtracking(0, init))
